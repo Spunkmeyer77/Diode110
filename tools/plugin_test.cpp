@@ -42,10 +42,10 @@ int main (int argc, char** argv)
     std::printf ("params: %d\n", (int) proc.getParameters().size());
     auto pv = [&] (const char* id) { return proc.apvts.getRawParameterValue (id)->load(); };
     auto near = [] (float a, float b) { return std::abs (a - b) < 0.01f; };
-    check (near (pv ("bd_decay"), 27.8f) && near (pv ("bd_lvl"), -8.4f) && near (pv ("sd_decay"), 43.9f) && near (pv ("sd_snappy"), 60.0f)
-           && near (pv ("cp_tune"), 2.6f) && near (pv ("cp_decay"), 30.0f) && near (pv ("cp_lvl"), -3.6f) && near (pv ("cp_tail"), 15.0f)
+    check (near (pv ("bd_tune"), -2.4f) && near (pv ("bd_decay"), 21.4f) && near (pv ("bd_lvl"), -8.4f) && near (pv ("sd_decay"), 36.1f) && near (pv ("sd_snappy"), 60.0f)
+           && near (pv ("cp_tune"), 2.6f) && near (pv ("cp_decay"), 30.0f) && near (pv ("cp_lvl"), 4.1f) && near (pv ("cp_tail"), 15.0f)
            && ! proc.showHelp.load(),
-           "defaults: BD Decay 27.8 %, Level -8.4 dB; SD Decay 43.9 %, Snappy 60 %; CP Tune 2.6 st, Decay 30 %, Level -3.6 dB, Tail 15 %; HELP off");
+           "defaults: BD Tune -2.4 st, Decay 21.4 %, Level -8.4 dB; SD Decay 36.1 %, Snappy 60 %; CP Tune 2.6 st, Decay 30 %, Level +4.1 dB, Tail 15 %");
     check (proc.apvts.getParameter ("pattern")->getNumSteps() == 32, "32 pattern slots (banks A-D x 8)");
     check (proc.apvts.getRawParameterValue ("rec")->load() < 0.5f && proc.getMode() == Tross110Processor::PlayPattern, "starts in PLAY PATTERN with REC off");
     proc.setMode (Tross110Processor::WriteTap);
@@ -354,7 +354,7 @@ int main (int argc, char** argv)
     }
     proc.apvts.getParameter ("bd_tune")->setValueNotifyingHost (0.25f);   // -6 st
     proc.setStateInformation (state.getData(), (int) state.getSize());
-    check (std::abs (proc.apvts.getRawParameterValue ("bd_tune")->load() - 0.0f) < 0.01f, "parameters restored");
+    check (std::abs (proc.apvts.getRawParameterValue ("bd_tune")->load() - (-2.4f)) < 0.01f, "parameters restored");
 
     check (bad == 0, "no NaN / inf in the output");
     std::printf ("peak %.3f\n", peak);
@@ -510,6 +510,104 @@ int main (int argc, char** argv)
         te->openCase (false, false);
         te->showAbout();
         snap ("editor_about.png");
+        te->getChildComponent (0)->getChildComponent (2)->setVisible (false);   // close About
+
+        // ---- PATTERN CHAIN: Cmd/Ctrl-click number keys
+        {
+            proc.quickChainClear();
+            fp.pressKey (FrontPanel::N1, false, false, true); fp.pressKey (FrontPanel::N2, false, false, true);
+            fp.pressKey (FrontPanel::N2, false, false, true); fp.pressKey (FrontPanel::N4, false, false, true);
+            check (proc.getQuickChain() == std::vector<int> ({ 0, 1, 1, 3 }), "Cmd-click 1, 2, 2, 4 = chain A1 A2 A2 A4");
+            for (int i = 0; i < 6; ++i) fp.pressKey (FrontPanel::N5, false, false, true);
+            check (proc.getQuickChain().size() == 8, "the chain stops at 8 patterns");
+            proc.quickChainClear();
+            fp.pressKey (FrontPanel::N1, false, false, true); fp.pressKey (FrontPanel::N3, false, false, true);
+            // plays A1 for a bar, then A3
+            host.ppq = 0.0; host.playing = true;
+            bool sawA1 = false, sawA3 = false;
+            for (int b = 0; b < 400; ++b) { run (1); const int c = proc.getCurrentSlot(); sawA1 |= c == 0; sawA3 |= c == 2; }
+            host.playing = false; run (2);
+            check (sawA1 && sawA3, "the chain plays A1 then A3, one per bar");
+            juce::MemoryBlock st; proc.getStateInformation (st);
+            Tross110Processor other; other.setStateInformation (st.getData(), (int) st.getSize());
+            check (other.getQuickChain() == std::vector<int> ({ 0, 2 }), "the chain is saved with the project");
+            fp.pressKey (FrontPanel::N1, false);
+            check (proc.getQuickChain().empty() && proc.getCurrentSlot() == 0, "a normal click ends the chain");
+        }
+
+        // ---- LCD pictures for the manual (2x)
+        {
+            ed->setSize (unit110ui::kDesignW, unit110ui::kDesignH);
+            auto lcd = [&] (const juce::String& name, bool keepMessage = false)
+            {
+                if (! keepMessage) fp.flash ("");
+                fp.repaint();
+                auto img = ed->createComponentSnapshot (FrontPanel::lcdRect().expanded (4), true, 2.0f);
+                auto f = outDir.getChildFile ("lcd_" + name + ".png"); f.deleteFile();
+                if (auto os = f.createOutputStream()) png.writeImageToStream (img, *os);
+            };
+            auto setP = [&] (const char* id, float v) { auto* p = proc.apvts.getParameter (id); p->setValueNotifyingHost (p->convertTo0to1 (v)); };
+            // a demo groove in A1
+            for (int r = 0; r < tross110::kNumRows; ++r) pats.set (0, r, 0);
+            for (int st2 : { 0, 4, 8, 10, 12 }) pats.setCell (0, 1, st2, true);
+            for (int st2 : { 4, 12 }) pats.setCell (0, 2, st2, true);
+            pats.setCell (0, 3, 12, true);
+            for (int st2 = 0; st2 < 16; st2 += 2) pats.setCell (0, 4, st2, true);
+            pats.setCell (0, 5, 14, true);
+            pats.setCell (0, 6, 0, true);
+            for (int st2 : { 0, 8 }) pats.setCell (0, 0, st2, true);
+            proc.selectSlot (0); proc.setMode (Tross110Processor::PlayPattern);
+            for (int to : { 1, 3 }) pats.copySlot (0, to);
+            pats.setCell (1, 2, 7, true); pats.setCell (3, 3, 15, true);
+            host.ppq = 0.0; host.playing = true; run (40);
+            lcd ("pattern");
+            host.playing = false; run (2);
+            fp.pressKey (FrontPanel::N4, true); fp.pressKey (FrontPanel::KSD, false); fp.pressKey (FrontPanel::Bank, false);
+            lcd ("step");
+            fp.pressKey (FrontPanel::Bank, false);
+            fp.pressKey (FrontPanel::N2, true);
+            fp.pressKey (FrontPanel::N1, false, false, true); fp.pressKey (FrontPanel::N2, false, false, true);
+            fp.pressKey (FrontPanel::N2, false, false, true); fp.pressKey (FrontPanel::N4, false, false, true);
+            host.ppq = 4.0; host.playing = true; run (30);
+            lcd ("chain");
+            host.playing = false; run (2);
+            fp.pressKey (FrontPanel::N1, false);
+            proc.chainClear();
+            fp.pressKey (FrontPanel::N3, true);
+            fp.pressKey (FrontPanel::N1, false); fp.pressKey (FrontPanel::N1, false); fp.pressKey (FrontPanel::N2, false);
+            fp.flash ("");
+            lcd ("writesong");
+            fp.pressKey (FrontPanel::N1, true);
+            host.ppq = 0.0; host.playing = true; run (40);
+            lcd ("playsong");
+            host.playing = false; run (2);
+            proc.chainClear(); fp.pressKey (FrontPanel::N2, true);
+            fp.pressKey (FrontPanel::KCH, true); fp.pressKey (FrontPanel::KSD, false, true);
+            fp.flash ("");
+            lcd ("mutesolo");
+            fp.pressKey (FrontPanel::KCH, true); fp.pressKey (FrontPanel::KSD, false, true);
+            fp.toggleLockView();
+            fp.pressKey (FrontPanel::KSD, false);
+            fp.lockParam = tross110::LTune;
+            fp.setLockFromY (4, FrontPanel::lockLane().getY() + 20.0f);
+            fp.setLockFromY (12, FrontPanel::lockLane().getBottom() - 30.0f);
+            fp.setLockFromY (6, FrontPanel::lockLane().getY() + 40.0f);
+            fp.flash ("");
+            lcd ("plock");
+            fp.toggleLockView();
+            fp.copyPattern();
+            lcd ("message", true);
+            fp.flash ("");
+            setP ("swing", 62.0f);
+            proc.internalPlay = true; run (30);
+            lcd ("swing");
+            proc.internalPlay = false; run (2);
+            setP ("swing", 50.0f);
+            setP ("power", 0.0f);
+            lcd ("off");
+            setP ("power", 1.0f);
+            for (int r = 0; r < tross110::kNumRows; ++r) pats.set (0, r, 0);
+        }
     }
     ed.reset();
 

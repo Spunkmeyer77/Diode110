@@ -149,11 +149,27 @@ void Tross110Processor::pullParams()
 // ---- pattern chain
 int Tross110Processor::chainSlotFor (long long absStep, int len) const
 {
-    const int n = chainLen.load();
-    if (n <= 0 || mode.load() != PlaySong) return -1;   // the song only plays in PLAY SONG
     const long long bar = absStep >= 0 ? absStep / len : -((-absStep + len - 1) / len);
-    return chain[(int) (((bar % n) + n) % n)].load();
+    if (mode.load() == PlaySong)   // the song only plays in PLAY SONG
+    {
+        const int n = chainLen.load();
+        return n > 0 ? chain[(int) (((bar % n) + n) % n)].load() : -1;
+    }
+    const int q = qcLen.load();    // otherwise a pattern chain, if there is one
+    return q > 0 ? qc[(int) (((bar % q) + q) % q)].load() : -1;
 }
+
+bool Tross110Processor::quickChainAdd (int slot)
+{
+    const int n = qcLen.load();
+    if (n >= kMaxQuickChain) return false;
+    qc[n] = juce::jlimit (0, kNumSlots - 1, slot);
+    qcLen = n + 1;
+    if (n == 0 && playStep.load() < 0) { currentSlot = slot; qcPos = 0; }
+    return true;
+}
+
+void Tross110Processor::quickChainClear() { qcLen = 0; qcPos = -1; }
 
 void Tross110Processor::setChain (const std::vector<int>& c)
 {
@@ -198,9 +214,9 @@ void Tross110Processor::doStep (int step, long long absStep, int len, bool seqOn
     {
         currentSlot = chained;
         pendingSlot = -1;
-        const int n = chainLen.load();
         const long long bar = absStep >= 0 ? absStep / len : -((-absStep + len - 1) / len);
-        chainPos = (int) (((bar % n) + n) % n);
+        if (mode.load() == PlaySong) { const int n = chainLen.load(); chainPos = (int) (((bar % n) + n) % n); }
+        else                         { const int q = qcLen.load(); qcPos = (int) (((bar % q) + q) % q); }
     }
     else if (step == 0 && pendingSlot.load() >= 0)
     {
@@ -285,9 +301,9 @@ void Tross110Processor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
         if (const int chained = chainSlotFor ((long long) std::floor (ppq * 4.0 + 1e-9), len); chained >= 0)
         {
             currentSlot = chained;   // stopped: show the chain step at the song position
-            const int n = chainLen.load();
             const long long b = (long long) std::floor (ppq * 4.0 / len + 1e-9);
-            chainPos = (int) (((b % n) + n) % n);
+            if (mode.load() == PlaySong) { const int n = chainLen.load(); if (n > 0) chainPos = (int) (((b % n) + n) % n); }
+            else                         { const int q = qcLen.load(); if (q > 0) qcPos = (int) (((b % q) + q) % q); }
         }
         wasPlaying = false;
         playStep = -1;
@@ -378,6 +394,9 @@ void Tross110Processor::getStateInformation (juce::MemoryBlock& destData)
         juce::StringArray ch;
         for (int s : getChain()) ch.add (juce::String (s));
         pats.setProperty ("chain", ch.joinIntoString (" "), nullptr);
+        juce::StringArray qa;
+        for (int i = 0; i < qcLen.load(); ++i) qa.add (juce::String (qc[i].load()));
+        pats.setProperty ("qchain", qa.joinIntoString (" "), nullptr);
     }
     for (int s = 0; s < kNumSlots; ++s)
     {
@@ -432,6 +451,13 @@ void Tross110Processor::setStateInformation (const void* data, int sizeInBytes)
     {
         juce::StringArray ch;
         ch.addTokens (pats.isValid() ? pats.getProperty ("chain").toString() : juce::String(), " ", "");
+        {
+            juce::StringArray qa;
+            qa.addTokens (pats.isValid() ? pats.getProperty ("qchain").toString() : juce::String(), " ", "");
+            qa.removeEmptyStrings();
+            quickChainClear();
+            for (auto& t : qa) quickChainAdd (t.getIntValue());
+        }
         std::vector<int> c;
         for (auto& t : ch) if (t.isNotEmpty()) c.push_back (t.getIntValue());
         setChain (c);

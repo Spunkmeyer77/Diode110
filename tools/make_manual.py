@@ -122,7 +122,8 @@ s += [table([
     ["SHIFT", "Click it, then the next key does its upper (printed) function. Holding the computer's Shift key while clicking works too. "
               "<b>Double-click</b> SHIFT to switch the LCD to the P-LOCK screen (section 4.1); double-click again to go back."],
     ["A|B|C|D", "Steps through the 4 banks of 8 patterns (A1-D8). With SHIFT, or in WRITE STEP: I-II, switches between steps 1-8 and 9-16."],
-    ["1 - 8", "Selects pattern 1-8 of the current bank. While playing, the new pattern starts at the next step 1 (the LCD shows NEXT)."],
+    ["1 - 8", "Selects pattern 1-8 of the current bank. While playing, the new pattern starts at the next step 1 (the LCD shows NEXT). "
+              "<b>Cmd-click</b> (Mac) / <b>Ctrl-click</b> (Windows, Linux) builds a PATTERN CHAIN of up to 8 patterns (section 4.3)."],
     ["START / STOP", "Runs and stops the sequencer while the DAW is stopped, at the DAW's tempo. When the DAW plays, UNIT 110 follows it."],
     ["Drum keys", "Play the drum. ACCENT arms an accent for the next drum you hit (the key stays down)."],
     ["SHIFT + drum", "<b>Mute</b> the drum on/off. Its row on the LCD shows M, the name blinks and its steps go faint."],
@@ -146,28 +147,112 @@ s += [table([
     ["drum key", "MUTE", "Mutes / unmutes that drum (see 3.2)."],
 ], [16 * mm, 32 * mm, W - 48 * mm])]
 
-s += [Paragraph("4  The LCD", h1),
-      P("The upper part is the pattern: 7 rows (ACCENT, BASS DR, SNARE, CLAP, C.HIHAT, O.HIHAT, CYMBAL) by 16 steps. "
-        "The playing step is shown reversed in the number row. Steps beyond the length are greyed out."),
-      P("<b>Click</b> a step to switch it on or off, or drag along a row to paint. <b>Right-click</b> the LCD for: export the pattern, all "
-        "patterns in a row, every pattern as its own file, or the song as MIDI; copy the pattern to another slot; clear the pattern or the song. "
-        "MIDI files use 16th notes on channel 10, accented steps at velocity 127."),
-      P("The lower boxes show the MODE (and short messages), the PATTERN (bank letter + number, NEXT for a queued one) and the TEMPO, "
-        "the length, the swing (SW) and whether the host (HOST) or UNIT 110 itself (RUN) is playing. M and S after a drum's name "
-        "mean muted and soloed."),
-      P("<b>Copy / Paste:</b> right-click the LCD, choose <b>Copy pattern</b>, select another pattern with the number keys, "
-        "right-click again and choose <b>Paste pattern</b>. The steps and the parameter locks are copied. <b>Copy pattern to</b> sends it "
-        "straight to any slot.")]
-s += [Paragraph("4.1  Parameter locks (P-LOCK screen)", h2),
+# ---- the LCD, screen by screen: pictures taken from the plug-in (docs/lcd/*.png, written by the test) with numbered callouts
+from PIL import Image as PILImage, ImageDraw as PILDraw, ImageFont as PILFont
+LCD_DIR = os.path.join(ROOT, "docs", "lcd")
+CALL_DIR = os.path.join(ROOT, "docs", "lcd", "callouts")
+os.makedirs(CALL_DIR, exist_ok=True)
+
+
+def callouts(name, marks):
+    """Draws numbered circles on an LCD picture; marks = [(x, y), ...] in the picture's pixels."""
+    im = PILImage.open(os.path.join(LCD_DIR, f"lcd_{name}.png")).convert("RGB")
+    d = PILDraw.Draw(im)
+    try: f = PILFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 22)
+    except Exception: f = PILFont.load_default()
+    for i, (x, y) in enumerate(marks, 1):
+        d.ellipse((x - 18, y - 18, x + 18, y + 18), fill=(214, 64, 40), outline=(255, 255, 255), width=3)
+        d.text((x, y), str(i), font=f, fill=(255, 255, 255), anchor="mm")
+    out = os.path.join(CALL_DIR, f"{name}.png")
+    im.save(out)
+    return out, im.size
+
+
+def screen(title, name, marks, legend, intro=None):
+    path, (w, h) = callouts(name, marks)
+    iw = W * 0.74
+    items = [Paragraph(title, h2)]
+    if intro: items.append(P(intro))
+    items.append(Image(path, width=iw, height=iw * h / w))
+    items.append(Spacer(1, 3))
+    items.append(table([["", "What it shows"]] + [[str(i), t] for i, t in enumerate(legend, 1)], [10 * mm, W - 10 * mm]))
+    return KeepTogether(items)
+
+
+s += [PageBreak(), Paragraph("4  The LCD", h1),
+      P("The LCD is UNIT 110's control centre. Everything on it is live: click steps to edit, click the boxes to change things, "
+        "<b>right-click</b> for the menu. These are its screens, taken straight from the plug-in.")]
+s += [screen("4.1  The pattern screen (PLAY PATTERN)", "pattern",
+             [(140, 34), (148, 170), (448, 123), (292, 352), (480, 398), (735, 398), (975, 398), (985, 600)],
+             ["Step numbers. The playing step is shown reversed. Steps beyond the length (12-step patterns) are greyed out.",
+              "The 7 rows: ACCENT and the six drums.",
+              "Steps: <b>click</b> to switch one on or off, <b>drag</b> along a row to paint. A small dot in a step = it has parameter locks.",
+              "The playing step's column is shaded.",
+              "MODE: the current mode, or a short message after an action.",
+              "PATTERN: bank letter + number (A1-D8). While playing, a newly chosen pattern blinks as NEXT until the bar ends.",
+              "TEMPO: the tempo in BPM (in the standalone app, drag it up/down; double-click = 120).",
+              "Length (12 / 16 STEPS), swing (SW), and HOST (the DAW is playing) or RUN (UNIT 110 runs on its own)."])]
+s += [screen("4.2  Writing steps (WRITE STEP)", "step",
+             [(148, 168), (60, 34), (480, 398), (480, 604)],
+             ["The arrow marks the row the number keys edit: press ACCENT or a drum key to choose it.",
+              "The underline shows which half the number keys edit: steps 1-8 or 9-16 (switch with the A|B|C|D key).",
+              "Mode (SHIFT + 4).",
+              "What you're editing: the row and the half."],
+             "SHIFT + 4, then a drum key, then number keys 1-8 to switch its steps.")]
+s += [screen("4.3  Pattern chain", "chain",
+             [(480, 398), (330, 487), (735, 398), (720, 606), (480, 604)],
+             ["PATTERN CHAIN: a chain is playing.",
+              "The chain in order (up to 8 patterns). The playing one is reversed; they loop, one per bar.",
+              "The pattern playing now.",
+              "Its place in the chain (2nd of 4).",
+              "How full the chain is. A normal click on a number key ends the chain."],
+             "<b>Cmd-click</b> (Mac) or <b>Ctrl-click</b> (Windows / Linux) number keys to build a chain: Cmd-click 1, 2, 2, 4 plays "
+             "A1 → A2 → A2 → A4 → A1 ... Change bank with A|B|C|D between clicks. A ninth click shows CHAIN FULL. "
+             "The chain is saved with the project.")]
+s += [screen("4.4  Song (WRITE SONG / PLAY SONG)", "writesong",
+             [(480, 398), (480, 604)],
+             ["WRITE SONG (SHIFT + 3): number keys add patterns to the end of the song, O.HIHAT (ENTER) adds the playing one, "
+              "C.HIHAT (DC) takes the last one back.",
+              "How many measures the song has (up to 32)."])]
+s += [screen("", "playsong",
+             [(480, 398), (480, 604), (735, 398)],
+             ["PLAY SONG (SHIFT + 1): the song plays, one pattern per bar, locked to the DAW's position.",
+              "Song length and the measure playing now.",
+              "The pattern of that measure."])]
+s += [screen("4.5  Mute and solo", "mutesolo",
+             [(240, 168), (240, 258), (500, 123)],
+             ["S = soloed (Option / Alt + drum key). Several drums can be soloed.",
+              "M = muted (SHIFT + drum key). A muted name blinks.",
+              "Drums that are silent (muted, or not soloed while others are) are shown faint."])]
+s += [screen("4.6  P-LOCK screen", "plock",
+             [(140, 62), (140, 330), (140, 200), (440, 90), (880, 215), (500, 378), (310, 398), (630, 398), (975, 398)],
+             ["P-LOCK: the lock screen is showing (double-click SHIFT; again to go back).",
+              "The top and bottom of the scale.",
+              "The drum and the setting being locked.",
+              "A lock: the bar's height is the step's own value. <b>Click or drag</b> to set, <b>double-click</b> to remove.",
+              "TUNE is centred on 0: bars go up (higher) or down (lower).",
+              "A mark under a step = the drum plays there.",
+              "DRUM: click to change (or press a drum key).",
+              "SETTING: click to step through TUNE, DECAY, LEVEL and the drum's extra.",
+              "VALUE: the last step you touched and its value (KNOB = no lock, the trimmer decides)."])]
+s += [screen("4.7  Messages", "message",
+             [(480, 398)],
+             ["After an action the MODE box confirms it for a moment: COPIED A1, PASTED TO A4, PATTERN CLEARED, SONG CLEARED, "
+              "12 STEPS, STEPS 9-16, SNARE MUTED, CHAIN FULL, HOST IS PLAYING..."])]
+s += [screen("4.8  Swing and running on its own", "swing",
+             [(990, 565)],
+             ["SW 62 = SWING at 62 %. RUN = UNIT 110 plays on its own (START with the DAW stopped); HOST = the DAW is playing."])]
+s += [screen("4.9  Power off", "off",
+             [(507, 322)],
+             ["With POWER off the LCD is blank and UNIT 110 is silent. The knobs and trimmers still move."])]
+s += [Paragraph("4.10  The right-click menu", h2),
+      P("Right-click the LCD for: <b>Export</b> this pattern, all patterns in a row, every pattern as its own file, or the song as MIDI "
+        "(16th notes on channel 10, accents at velocity 127, swing included); <b>Copy pattern</b> / <b>Paste pattern</b> (steps and locks); "
+        "<b>Copy pattern to</b> a slot of bank A, B, C or D; <b>Clear</b> the pattern or the song; on the P-LOCK screen also clear the "
+        "locks of a lane, of a drum or of the whole pattern.")]
+s += [Paragraph("4.11  Parameter locks", h2),
       P("A parameter lock gives one step of one drum its own setting: a higher tuned snare on step 7, a longer open hat on the last step. "
-        "<b>Double-click SHIFT</b>: the LCD shows the locks of one drum for one setting, as a bar per step, and the SHIFT key stays down."),
-      P("Choose the drum by pressing its drum key (or click the DRUM box). Click the SETTING box to step through TUNE, DECAY, LEVEL and the "
-        "drum's extra (ATTACK, SNAPPY, TAIL or TONE). <b>Click or drag</b> in a step's column to set its value: top = maximum, bottom = minimum "
-        "(TUNE is centred on 0). <b>Double-click</b> (or Alt-click) a column to remove the lock: that step then follows the trimmer again. "
-        "A mark under a column shows where the drum plays. Right-click for clearing a lane, a drum or the whole pattern."),
-      Image(os.path.join(ROOT, "docs", "locks.png"), width=W * 0.62, height=W * 0.62 * 922 / 1502),
-      P("A lock holds until that drum's next hit. Locks are saved with each pattern and copied with it. Steps with locks show a small dot "
-        "in the normal pattern view.")]
+        "A lock holds until that drum's next hit. Locks are saved with each pattern and copied with it.")]
 
 s += [Paragraph("5  Inside the case", h1),
       P("Click either <b>screw in the bottom corners</b> of the front panel to open the unit. The circuit board has a service trimmer for "
@@ -183,6 +268,8 @@ s += [table([
               "On the bass drum it is the ring of its resonant filter; on the snare the length of the noise; on the clap the last burst "
               "and the room tail."],
     ["LEVEL", "The drum's level, -inf to +6 dB."],
+    ["Defaults", "Bass drum TUNE -2.4 st, DECAY 21.4 %; snare DECAY 36.1 %; clap TUNE +2.6 st, DECAY 30 %, LEVEL +4.1 dB. "
+                 "Double-click any trimmer to return to its default."],
     ["ACC: DRIVE", "How much an accent pushes the machine into grit."],
     ["ACC: DECAY", "How long the accent swell lasts."],
     ["ACC: LEVEL", "Accent amount (the same setting as the ACCENT knob on the front)."],

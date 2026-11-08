@@ -799,7 +799,7 @@ juce::Rectangle<float> FrontPanel::lcdBox (int i) const
     return { glass.getX() + 378.0f, by, glass.getWidth() - 386.0f, bh };
 }
 
-juce::Font FrontPanel::MenuLook::getPopupMenuFont() { return font (17.0f, false); }
+juce::Font FrontPanel::MenuLook::getPopupMenuFont() { return font (34.0f, false); }
 
 bool FrontPanel::drumFlag (int voice, const char* suffix) const
 {
@@ -911,8 +911,31 @@ void FrontPanel::drawLcd (juce::Graphics& g)
     const bool msgOn = message.isNotEmpty();
     g.setColour (ink());
     auto mb = boxes[0].withTrimmedTop (14.0f).reduced (6.0f, 2.0f);
-    g.setFont (font (msgOn ? 16.0f : 20.0f));
-    g.drawFittedText (msgOn ? message : modeName (mode), mb.withTrimmedBottom (16.0f).toNearestInt(), juce::Justification::centredLeft, 2);
+    const auto qchain = proc.getQuickChain();
+    const bool chainView = ! msgOn && mode == Tross110Processor::PlayPattern && ! qchain.empty();
+    if (chainView)
+    {
+        // PATTERN CHAIN + the chain, the playing pattern reversed
+        g.setFont (font (16.0f));
+        g.drawText ("PATTERN CHAIN", mb.withHeight (20.0f), juce::Justification::centredLeft);
+        const int pos = proc.getQuickChainPos();
+        const float cw = mb.getWidth() / 8.0f;
+        for (int i = 0; i < (int) qchain.size(); ++i)
+        {
+            const auto c = juce::Rectangle<float> (mb.getX() + i * cw, mb.getY() + 24.0f, cw - 3.0f, 22.0f);
+            const bool now = i == (pos >= 0 ? pos : 0);
+            if (now) { g.setColour (ink()); g.fillRect (c); }
+            g.setColour (now ? lcdGlass : ink());
+            g.setFont (font (13.0f));
+            g.drawText (slotName (qchain[(size_t) i]), c, juce::Justification::centred);
+        }
+        g.setColour (ink());
+    }
+    else
+    {
+        g.setFont (font (msgOn ? 16.0f : 20.0f));
+        g.drawFittedText (msgOn ? message : modeName (mode), mb.withTrimmedBottom (16.0f).toNearestInt(), juce::Justification::centredLeft, 2);
+    }
     g.setFont (font (10.0f));
     juce::String status;
     if (shiftLatched) status << "SHIFT  ";
@@ -925,6 +948,7 @@ void FrontPanel::drawLcd (juce::Graphics& g)
         if (mode == Tross110Processor::PlaySong && proc.getChainPos() >= 0 && ! ch.empty()) status << "  NOW " << proc.getChainPos() + 1;
     }
     else if (mode == Tross110Processor::WriteTap) status << "REC LIVE HITS";
+    else if (chainView) status << (int) qchain.size() << " / 8  -  CLICK A KEY TO END";
     g.drawText (status, mb.withTrimmedTop (mb.getHeight() - 15.0f), juce::Justification::centredLeft);
 
     // pattern: bank letter + number, the queued one blinks next to it
@@ -935,6 +959,7 @@ void FrontPanel::drawLcd (juce::Graphics& g)
     const int pend = proc.getPendingSlot();
     juce::String sub = "BANK " + juce::String::charToString ((juce::juce_wchar) ('A' + bank));
     if (pend >= 0) sub = (blink / 8) % 2 ? "NEXT " + slotName (pend) : juce::String();
+    else if (chainView) sub = "CHAIN " + juce::String (juce::jmax (0, proc.getQuickChainPos()) + 1) + "/" + juce::String ((int) qchain.size());
     g.drawText (sub, pb.withTrimmedTop (pb.getHeight() - 15.0f), juce::Justification::centred);
 
     // tempo + length
@@ -956,7 +981,7 @@ void FrontPanel::selectSlot (int slot)
     proc.selectSlot (slot);
 }
 
-void FrontPanel::pressKey (int key, bool shiftHeld, bool altHeld)
+void FrontPanel::pressKey (int key, bool shiftHeld, bool altHeld, bool cmdHeld)
 {
     const bool shift = shiftHeld || shiftLatched;
     if (key == Shift) { shiftLatched = ! shiftLatched; repaint(); return; }
@@ -1009,9 +1034,15 @@ void FrontPanel::pressKey (int key, bool shiftHeld, bool altHeld)
             if (proc.getChainLength() >= Tross110Processor::kMaxChain) flash ("SONG FULL");
             else { proc.chainAppend (bank * 8 + n); flash ("MEAS " + juce::String (proc.getChainLength()) + " = " + slotName (bank * 8 + n)); }
         }
+        else if (cmdHeld)   // Cmd / Ctrl-click: PATTERN CHAIN
+        {
+            if (mode != Tross110Processor::PlayPattern) proc.setMode (Tross110Processor::PlayPattern);
+            if (! proc.quickChainAdd (bank * 8 + n)) flash ("CHAIN FULL");
+        }
         else
         {
             if (mode == Tross110Processor::PlaySong) { proc.setMode (Tross110Processor::PlayPattern); }
+            if (proc.getQuickChain().size() > 0) proc.quickChainClear();   // a normal click ends the chain
             selectSlot (bank * 8 + n);
         }
     }
@@ -1285,7 +1316,7 @@ void FrontPanel::mouseDown (const juce::MouseEvent& e)
             }
             heldKey = k;
             if (k == Shift && e.getNumberOfClicks() >= 2) { toggleLockView(); flash (lockView ? "P-LOCK" : modeName (proc.getMode())); return; }
-            pressKey (k, e.mods.isShiftDown(), e.mods.isAltDown());
+            pressKey (k, e.mods.isShiftDown(), e.mods.isAltDown(), e.mods.isCommandDown());
             repaint();
             return;
         }
@@ -1343,7 +1374,7 @@ void FrontPanel::showDrumMenu (int v)
     m.setLookAndFeel (&menuLook);
     m.addSectionHeader (names[v]);
     m.addItem (1, "Own output", true, drumFlag (v, "_out"));
-    m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this).withMousePosition().withStandardItemHeight (30),
+    m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this).withMousePosition().withStandardItemHeight (60),
                      [safe = juce::Component::SafePointer<FrontPanel> (this), v] (int r)
                      {
                          if (safe != nullptr && r == 1) safe->toggleDrumFlag (v, "_out");
@@ -1358,8 +1389,13 @@ void FrontPanel::showLcdMenu()
     const auto chain = proc.getChain();
 
     juce::PopupMenu copy;
+    juce::PopupMenu banks[4];
     for (int s = 0; s < kNumSlots; ++s)
-        if (s != slot) copy.addItem (100 + s, slotName (s) + (MidiExport::isEmpty (proc.patterns, s) ? "" : "  (used)"));
+    {
+        banks[s / 8].setLookAndFeel (&menuLook);
+        if (s != slot) banks[s / 8].addItem (100 + s, slotName (s) + (MidiExport::isEmpty (proc.patterns, s) ? "" : "  (used)"));
+    }
+    for (int b = 0; b < 4; ++b) copy.addSubMenu ("Bank " + juce::String::charToString ((juce::juce_wchar) ('A' + b)), banks[b]);
     juce::PopupMenu m;
     m.setLookAndFeel (&menuLook);
     copy.setLookAndFeel (&menuLook);
@@ -1381,7 +1417,7 @@ void FrontPanel::showLcdMenu()
     }
     m.addItem (5, "Clear pattern");
     m.addItem (6, "Clear song", ! chain.empty());
-    m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this).withMousePosition().withStandardItemHeight (30),
+    m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this).withMousePosition().withStandardItemHeight (60),
                      [safe = juce::Component::SafePointer<FrontPanel> (this), slot, nonEmpty, chain] (int r)
                      {
                          if (safe == nullptr) return;

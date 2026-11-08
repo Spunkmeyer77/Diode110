@@ -81,7 +81,7 @@ public:
     static juce::Rectangle<int> keyRect (int key);
     static juce::Rectangle<int> lcdRect() { return { 128, 135, 499, 314 }; }
     static juce::Rectangle<int> lcdCell (int row, int step);   // row 0 = accent
-    void pressKey (int key, bool shiftHeld, bool altHeld = false);   // what a click on a key does
+    void pressKey (int key, bool shiftHeld, bool altHeld = false, bool cmdHeld = false);   // what a click on a key does
     void flash (const juce::String& message);                  // a short message in the LCD's mode box
     bool isShiftLatched() const { return shiftLatched; }
     int  getStepRow() const { return stepRow; }

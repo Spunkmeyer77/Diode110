@@ -59,6 +59,14 @@ public:
     std::vector<int> getChain() const    { std::vector<int> v; for (int i = 0; i < chainLen.load(); ++i) v.push_back (chain[i].load()); return v; }
     int  getChainVersion() const         { return chainVersion.load(); }
 
+    // ---- PATTERN CHAIN (Cmd/Ctrl-click number keys): up to 8 patterns looping in PLAY PATTERN, one per bar
+    static constexpr int kMaxQuickChain = 8;
+    bool quickChainAdd (int slot);               // false when full
+    void quickChainClear();
+    std::vector<int> getQuickChain() const { std::vector<int> v; for (int i = 0; i < qcLen.load(); ++i) v.push_back (qc[i].load()); return v; }
+    int  getQuickChainPos() const        { return qcPos.load(); }
+    bool isQuickChainActive() const      { return qcLen.load() > 0 && mode.load() != PlaySong; }
+
     // a click on a drum's name strip: plays it like a keyboard hit (accent = Shift-click, velocity 127)
     // and, with REC on while playing, records it. Called from the UI thread; handled in the next block.
     void panelHit (int voice, bool accent)
@@ -98,6 +106,8 @@ private:
     int chainSlotFor (long long absStep, int len) const;   // -1 = no chain
     std::atomic<int> chain[kMaxChain] {};
     std::atomic<int> chainLen { 0 }, chainPos { -1 }, chainVersion { 0 };
+    std::atomic<int> qc[kMaxQuickChain] {};
+    std::atomic<int> qcLen { 0 }, qcPos { -1 };
 
     // single-producer / single-consumer queue of name-strip clicks (UI thread -> audio thread)
     static constexpr int kHitQueue = 64;

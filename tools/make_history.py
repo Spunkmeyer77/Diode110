@@ -14,6 +14,13 @@ VERSION = re.search(r"project\(UNIT110 VERSION ([0-9.]+)\)", open(os.path.join(R
 OUT = os.path.join(ROOT, "docs", "UNIT110-History.pdf")
 
 HISTORY = [
+    ("1.0.7", [
+        "New PATTERN CHAIN: Cmd-click (Mac) / Ctrl-click (Windows, Linux) number keys to chain up to 8 patterns, looping one per bar. "
+        "The LCD shows PATTERN CHAIN, the chain with the playing pattern reversed, and CHAIN 2/4. A normal click ends it; saved with the project.",
+        "New defaults: bass drum TUNE -2.4 st and DECAY 21.4 %, snare DECAY 36.1 %, clap LEVEL +4.1 dB.",
+        "Right-click menus twice as large; Copy pattern to is split by bank.",
+        "The manual now shows every LCD screen with numbered callouts.",
+    ]),
     ("1.0.6", [
         "Twice-as-sharp artwork: the front panel and the circuit board are now stored at double resolution, crisp on Retina / HiDPI "
         "screens and at the largest window size.",

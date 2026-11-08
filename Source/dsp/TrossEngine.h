@@ -34,9 +34,9 @@ struct SoundParams
 {
     float master = -6, accent = 50;
     //                       BD     SD     CP    CH  OH  CY
-    float lvl[kNumVoices]   { -8.4f, 0,    -3.6f, 0, 0, 0 };    // dB, -70..6
-    float tune[kNumVoices]  { 0,     0,     2.6f, 0, 0, 0 };    // semitones
-    float decay[kNumVoices] { 27.8f, 43.9f, 30.0f, 50, 50, 50 }; // %, 50 = the original timing
+    float lvl[kNumVoices]   { -8.4f, 0,     4.1f, 0, 0, 0 };    // dB, -70..6
+    float tune[kNumVoices]  { -2.4f, 0,     2.6f, 0, 0, 0 };    // semitones
+    float decay[kNumVoices] { 21.4f, 36.1f, 30.0f, 50, 50, 50 }; // %, 50 = the original timing
     float bdAttack = 50, sdSnappy = 60, cpTail = 15.0f, cyTone = 50;
     float accDrive = 50, accDecay = 50;   // accent trimmers: grit and swell length, %
     bool mute[kNumVoices] {}, solo[kNumVoices] {};
