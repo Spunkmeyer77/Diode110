@@ -190,7 +190,7 @@ void AboutBox::paint (juce::Graphics& g)
     g.setFont (font (22.0f, false));
     g.drawText ("TRANSISTOR LABS", (int) c.getX() + 92, (int) c.getY() + 40, 300, 34, juce::Justification::centredLeft);
     g.setFont (font (64.0f));
-    g.drawText ("UNIT 110", (int) c.getX() + 34, (int) c.getY() + 82, 420, 64, juce::Justification::centredLeft);
+    g.drawText ("DIODE 110", (int) c.getX() + 34, (int) c.getY() + 82, 420, 64, juce::Justification::centredLeft);
     g.setColour (juce::Colour (0xff6fb3d2));
     g.setFont (font (18.0f));
     g.drawText ("v" JucePlugin_VersionString, (int) c.getRight() - 234, (int) c.getY() + 104, 200, 30, juce::Justification::centredRight);
@@ -528,7 +528,7 @@ void FrontPanel::drawPanelPrint (juce::Graphics& g)
         g.strokePath (hp, juce::PathStrokeType (4.2f, juce::PathStrokeType::curved));
         print (g, "TR", box.withSizeKeepingCentre (34, 24), kLogoInk, true, juce::Justification::centred, false);
         print (g, "TRANSISTOR LABS", O (366, 301, 275, 29), kLogoInk, true, juce::Justification::centred, false);
-        print (g, "UNIT110", O (694, 309, 157, 32), kLogoInk);
+        print (g, "DIODE 110", O (662, 309, 189, 32), kLogoInk);
     }
     // top edge
     print (g, "ACC TRIG OUT", O (1105, 302, 140, 17), kPrintInk);
@@ -1423,9 +1423,9 @@ void FrontPanel::showLcdMenu()
                          if (safe == nullptr) return;
                          auto& self = *safe;
                          if (r == 1) self.exportMidi ({ slot }, MidiExport::fileName (slot));
-                         if (r == 2) self.exportMidi (nonEmpty, "UNIT110 Patterns.mid");
+                         if (r == 2) self.exportMidi (nonEmpty, "Diode110 Patterns.mid");
                          if (r == 3) self.exportSeparate();
-                         if (r == 4) self.exportMidi (chain, "UNIT110 Song.mid");
+                         if (r == 4) self.exportMidi (chain, "Diode110 Song.mid");
                          if (r == 5) { self.proc.patterns.clear (slot); self.flash ("PATTERN CLEARED"); }
                          if (r == 6) { self.proc.chainClear(); self.flash ("SONG CLEARED"); }
                          if (r == 7) self.copyPattern();
@@ -1456,7 +1456,7 @@ void FrontPanel::exportSeparate()
     std::vector<Item> files;
     for (int s = 0; s < kNumSlots; ++s)
         if (! MidiExport::isEmpty (proc.patterns, s))
-            files.push_back ({ MidiExport::fileName (s), MidiExport::make (proc.patterns, { s }, len(), proc.currentBpm.load(), "UNIT 110 Pattern " + slotName (s)) });
+            files.push_back ({ MidiExport::fileName (s), MidiExport::make (proc.patterns, { s }, len(), proc.currentBpm.load(), "Diode 110 Pattern " + slotName (s)) });
     chooser = std::make_unique<juce::FileChooser> ("Choose a folder for the MIDI files", exportStartFolder());
     chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectDirectories,
                           [files] (const juce::FileChooser& fc)

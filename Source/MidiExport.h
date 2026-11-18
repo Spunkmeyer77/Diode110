@@ -1,4 +1,4 @@
-// Turns UNIT 110 patterns into standard MIDI files.
+// Turns Diode 110 patterns into standard MIDI files.
 #pragma once
 
 #include <juce_audio_basics/juce_audio_basics.h>
@@ -13,7 +13,7 @@ struct MidiExport
     static constexpr int kTicksPerQuarter = 96, kTicksPerStep = 24, kNoteTicks = 23, kChannel = 10;
     static constexpr int kVelocity = 100, kAccentVelocity = 127;
 
-    // the note each drum is written on: UNIT 110's own map, which is also the General MIDI drum map
+    // the note each drum is written on: Diode 110's own map, which is also the General MIDI drum map
     static int noteFor (int voice)
     {
         static const int notes[kNumVoices] = { 36, 38, 39, 42, 46, 49 };   // BD SD CP CH OH CY
@@ -73,6 +73,6 @@ struct MidiExport
         return out.openedOk() && f.writeTo (out, 0);
     }
 
-    static juce::String fileName (int slot) { return "UNIT110 Pattern " + slotName (slot) + ".mid"; }
+    static juce::String fileName (int slot) { return "Diode110 Pattern " + slotName (slot) + ".mid"; }
 };
 } // namespace tross110

@@ -1,32 +1,32 @@
 ; Inno Setup script for the Windows installer.
-; Build:  ISCC /DAppVersion=0.1.0 installer\windows\UNIT110.iss
+; Build:  ISCC /DAppVersion=0.1.0 installer\windows\Diode110.iss
 ; (paths are relative to this file; expects a Release build in ..\..\build)
 
 #ifndef AppVersion
   #define AppVersion "0.0.0"
 #endif
 
-#define Artefacts "..\..\build\UNIT110_artefacts\Release"
+#define Artefacts "..\..\build\Diode110_artefacts\Release"
 
 [Setup]
-AppId={{7C2D5E91-3B44-4F0A-9E61-0D1A6B2F8C53}
-AppName=UNIT 110
+AppId={{4B8E1F27-9D3C-4A65-B0E2-6C17F5A93D48}
+AppName=Diode 110
 AppVersion={#AppVersion}
-AppVerName=UNIT 110 {#AppVersion}
+AppVerName=Diode 110 {#AppVersion}
 AppPublisher=Transistor Labs
-DefaultDirName={autopf}\Transistor Labs\UNIT 110
+DefaultDirName={autopf}\Transistor Labs\Diode 110
 DefaultGroupName=Transistor Labs
 DisableDirPage=yes
 DisableProgramGroupPage=yes
 OutputDir=..\..\dist
-OutputBaseFilename=UNIT110-{#AppVersion}-Windows-Setup
+OutputBaseFilename=Diode110-{#AppVersion}-Windows-Setup
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=admin
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
-UninstallDisplayName=UNIT 110
+UninstallDisplayName=Diode 110
 
 [Types]
 Name: "full";   Description: "VST3 plug-in and standalone app"
@@ -37,11 +37,11 @@ Name: "vst3"; Description: "VST3 plug-in (Ableton Live, Bitwig, Reaper, Cubase..
 Name: "app";  Description: "Standalone app";                                         Types: full custom
 
 [Files]
-Source: "{#Artefacts}\VST3\UNIT 110.vst3\*"; DestDir: "{commoncf64}\VST3\UNIT 110.vst3"; Components: vst3; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#Artefacts}\Standalone\UNIT 110.exe"; DestDir: "{app}"; Components: app; Flags: ignoreversion
+Source: "{#Artefacts}\VST3\Diode 110.vst3\*"; DestDir: "{commoncf64}\VST3\Diode 110.vst3"; Components: vst3; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#Artefacts}\Standalone\Diode 110.exe"; DestDir: "{app}"; Components: app; Flags: ignoreversion
 
 [Icons]
-Name: "{autoprograms}\UNIT 110"; Filename: "{app}\UNIT 110.exe"; Components: app
+Name: "{autoprograms}\Diode 110"; Filename: "{app}\Diode 110.exe"; Components: app
 
 [Messages]
-FinishedLabel=UNIT 110 is installed.%n%nRescan plug-ins in your DAW (Ableton Live: Settings > Plug-Ins > Rescan).
+FinishedLabel=Diode 110 is installed.%n%nRescan plug-ins in your DAW (Ableton Live: Settings > Plug-Ins > Rescan).

@@ -1,8 +1,8 @@
-# Builds UNIT 110 on macOS, Windows and Linux.
+# Builds Diode 110 on macOS, Windows and Linux.
 # - every push / pull request: builds + installers, downloadable under the run's "Artifacts"
 # - every push to main (or a tag like v1.0.0): also publishes the GitHub Release v<version from CMakeLists.txt>
 #   with all installers, the manual and the update history attached
-name: Build UNIT 110
+name: Build Diode 110
 
 on:
   push:
@@ -39,7 +39,7 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Read version
-        run: echo "VERSION=$(sed -nE 's/^project\(UNIT110 VERSION ([0-9.]+)\).*/\1/p' CMakeLists.txt)" >> "$GITHUB_ENV"
+        run: echo "VERSION=$(sed -nE 's/^project\(Diode110 VERSION ([0-9.]+)\).*/\1/p' CMakeLists.txt)" >> "$GITHUB_ENV"
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
@@ -71,15 +71,15 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           mkdir -p test-out
-          xvfb-run -a build/UNIT110Test_artefacts/Release/UNIT110Test test-out
+          xvfb-run -a build/Diode110Test_artefacts/Release/Diode110Test test-out
 
       - name: Check minimum macOS version
         if: runner.os == 'macOS'
         run: |
           # x86_64 should need 10.13, arm64 11.0 (the lowest Apple silicon allows). Nothing may need more than macOS 12.
-          for f in "build/UNIT110_artefacts/Release/AU/UNIT 110.component/Contents/MacOS/UNIT 110" \
-                   "build/UNIT110_artefacts/Release/VST3/UNIT 110.vst3/Contents/MacOS/UNIT 110" \
-                   "build/UNIT110_artefacts/Release/Standalone/UNIT 110.app/Contents/MacOS/UNIT 110"; do
+          for f in "build/Diode110_artefacts/Release/AU/Diode 110.component/Contents/MacOS/Diode 110" \
+                   "build/Diode110_artefacts/Release/VST3/Diode 110.vst3/Contents/MacOS/Diode 110" \
+                   "build/Diode110_artefacts/Release/Standalone/Diode 110.app/Contents/MacOS/Diode 110"; do
             for arch in x86_64 arm64; do
               v=$(otool -arch $arch -l "$f" | awk '/LC_BUILD_VERSION/ {b=1} /LC_VERSION_MIN_MACOSX/ {m=1} b && $1=="minos" {print $2; exit} m && $1=="version" {print $2; exit}')
               echo "::notice::$(basename "$(dirname "$(dirname "$(dirname "$f")")")") $arch needs macOS $v"
@@ -93,9 +93,9 @@ jobs:
         continue-on-error: true
         run: |
           mkdir -p ~/Library/Audio/Plug-Ins/Components
-          cp -R "build/UNIT110_artefacts/Release/AU/UNIT 110.component" ~/Library/Audio/Plug-Ins/Components/
+          cp -R "build/Diode110_artefacts/Release/AU/Diode 110.component" ~/Library/Audio/Plug-Ins/Components/
           killall -9 AudioComponentRegistrar 2>/dev/null || true
-          auval -v aumu U110 Trlb
+          auval -v aumu D110 Trlb
 
       # ---- packaging ---------------------------------------------------------------------
       - name: Package (macOS)
@@ -103,10 +103,10 @@ jobs:
         run: |
           chmod +x tools/make_pkg.sh
           ./tools/make_pkg.sh
-          mv "dist/UNIT110-$VERSION.pkg" "dist/UNIT110-$VERSION-macOS.pkg"
-          cd build/UNIT110_artefacts/Release
-          ditto -c -k --keepParent "AU/UNIT 110.component" "$GITHUB_WORKSPACE/dist/UNIT110-$VERSION-macOS-AU.zip"
-          ditto -c -k --keepParent "VST3/UNIT 110.vst3" "$GITHUB_WORKSPACE/dist/UNIT110-$VERSION-macOS-VST3.zip"
+          mv "dist/Diode110-$VERSION.pkg" "dist/Diode110-$VERSION-macOS.pkg"
+          cd build/Diode110_artefacts/Release
+          ditto -c -k --keepParent "AU/Diode 110.component" "$GITHUB_WORKSPACE/dist/Diode110-$VERSION-macOS-AU.zip"
+          ditto -c -k --keepParent "VST3/Diode 110.vst3" "$GITHUB_WORKSPACE/dist/Diode110-$VERSION-macOS-VST3.zip"
 
       - name: Package (Windows)
         if: runner.os == 'Windows'
@@ -114,14 +114,14 @@ jobs:
         run: |
           $iscc = Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
-          & $iscc "/DAppVersion=$env:VERSION" "installer\windows\UNIT110.iss" 2>&1 | Tee-Object -FilePath iscc.log
+          & $iscc "/DAppVersion=$env:VERSION" "installer\windows\Diode110.iss" 2>&1 | Tee-Object -FilePath iscc.log
           if ($LASTEXITCODE -ne 0) {
             "## Inno Setup errors" | Out-File -Append $env:GITHUB_STEP_SUMMARY
             Get-Content iscc.log -Tail 30 | ForEach-Object { "::error::$_" }
             exit $LASTEXITCODE
           }
-          Compress-Archive -Path "build\UNIT110_artefacts\Release\VST3\UNIT 110.vst3" `
-                           -DestinationPath "dist\UNIT110-$env:VERSION-Windows-VST3.zip"
+          Compress-Archive -Path "build\Diode110_artefacts\Release\VST3\Diode 110.vst3" `
+                           -DestinationPath "dist\Diode110-$env:VERSION-Windows-VST3.zip"
 
       - name: Package (Linux)
         if: runner.os == 'Linux'
@@ -131,7 +131,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: UNIT110-${{ env.VERSION }}-${{ matrix.name }}
+          name: Diode110-${{ env.VERSION }}-${{ matrix.name }}
           path: dist/*
           if-no-files-found: error
 
@@ -143,7 +143,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Read version
-        run: echo "VERSION=$(sed -nE 's/^project\(UNIT110 VERSION ([0-9.]+)\).*/\1/p' CMakeLists.txt)" >> "$GITHUB_ENV"
+        run: echo "VERSION=$(sed -nE 's/^project\(Diode110 VERSION ([0-9.]+)\).*/\1/p' CMakeLists.txt)" >> "$GITHUB_ENV"
       - uses: actions/download-artifact@v4
         with:
           path: dist
@@ -151,9 +151,9 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.VERSION }}
-          name: UNIT 110 ${{ env.VERSION }}
+          name: Diode 110 ${{ env.VERSION }}
           target_commitish: ${{ github.sha }}
           files: dist/*
           body: |
-            UNIT 110 ${{ env.VERSION }} by Transistor Labs. Installers for macOS (.pkg), Windows (.exe) and Linux (.tar.gz), plus the manual and the update history.
+            Diode 110 ${{ env.VERSION }} by Transistor Labs. Installers for macOS (.pkg), Windows (.exe) and Linux (.tar.gz), plus the manual and the update history.
             macOS: the installer is not notarised; see "macOS security warning" in the manual.

@@ -4,7 +4,7 @@
 #include <juce_gui_extra/juce_gui_extra.h>
 #include "PluginProcessor.h"
 
-// UNIT 110 editor: the photographed front panel (keys, knobs, LCD, power switch) and, behind a
+// Diode 110 editor: the photographed front panel (keys, knobs, LCD, power switch) and, behind a
 // case screw, the open circuit board with the service trimmers. Everything is laid out in the
 // panel image's own pixels (kDesignW x kDesignH) and scaled to the window.
 namespace unit110ui

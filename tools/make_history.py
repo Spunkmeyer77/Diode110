@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Builds docs/UNIT110-History.pdf, the update history (needs: pip install reportlab).
+# Builds docs/Diode110-History.pdf, the update history (needs: pip install reportlab).
 #   python3 tools/make_history.py
 # Add new versions at the top of HISTORY. No dates.
 import os, re
@@ -10,10 +10,15 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, KeepTogether
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-VERSION = re.search(r"project\(UNIT110 VERSION ([0-9.]+)\)", open(os.path.join(ROOT, "CMakeLists.txt")).read()).group(1)
-OUT = os.path.join(ROOT, "docs", "UNIT110-History.pdf")
+VERSION = re.search(r"project\(Diode110 VERSION ([0-9.]+)\)", open(os.path.join(ROOT, "CMakeLists.txt")).read()).group(1)
+OUT = os.path.join(ROOT, "docs", "Diode110-History.pdf")
 
 HISTORY = [
+    ("1.0.8", [
+        "New name: UNIT 110 is now DIODE 110 (Transistor Labs). The panel, the About window, the DAW list, the files and the manual "
+        "carry the new name.",
+        "Installed as a new plug-in: delete the old UNIT 110 files (see the manual, Installing) and rescan.",
+    ]),
     ("1.0.7", [
         "New PATTERN CHAIN: Cmd-click (Mac) / Ctrl-click (Windows, Linux) number keys to chain up to 8 patterns, looping one per bar. "
         "The LCD shows PATTERN CHAIN, the chain with the playing pattern reversed, and CHAIN 2/4. A normal click ends it; saved with the project.",
@@ -42,7 +47,7 @@ HISTORY = [
         "Sharp panel: all lettering, numbers, key legends and icons are now drawn as vector graphics, crisp at any window size.",
         "Spelling: BASS DRUM, DC.",
         "The TEMPO knob is now SWING (STRAIGHT to SHUFFLE, 50-75 %). MIDI export swings too.",
-        "UNIT 110 always follows the DAW tempo; START / STOP with the DAW stopped also use it. In the standalone app the tempo is set by "
+        "Diode 110 always follows the DAW tempo; START / STOP with the DAW stopped also use it. In the standalone app the tempo is set by "
         "dragging the TEMPO box on the LCD.",
         "Mute with SHIFT + drum key, solo with Option (Alt) + drum key; the LCD shows M / S.",
         "The drum keys' right-click menu now holds only Own output. Right-click menus are larger.",
@@ -60,7 +65,7 @@ HISTORY = [
         "Fixed: the plug-in and app did not open on macOS 12 (and other versions older than the build machine). They now run on macOS 10.13 and later.",
     ]),
     ("1.0.0", [
-        "First release of UNIT 110 by Transistor Labs.",
+        "First release (as UNIT 110) by Transistor Labs.",
         "Hyperrealistic front panel: photographed keys that sink when pressed, turning knobs, a working POWER switch and a live LCD.",
         "The LCD shows all 7 rows (accent + 6 drums) on a 16-step grid, the playing step, the mode, the pattern and the tempo. "
         "Click steps to edit them; right-click for MIDI export, copy and clear.",
@@ -88,16 +93,16 @@ def footer(c, doc):
     c.saveState()
     c.setFont("Helvetica", 8)
     c.setFillColor(GREY)
-    c.drawString(18 * mm, 10 * mm, "UNIT 110 update history  ·  Transistor Labs  ·  ticcoross@gmail.com")
+    c.drawString(18 * mm, 10 * mm, "Diode 110 update history  ·  Transistor Labs  ·  ticcoross@gmail.com")
     c.drawRightString(A4[0] - 18 * mm, 10 * mm, str(doc.page))
     c.restoreState()
 
 
-s = [Paragraph('UNIT <font color="#3f7f9e">110</font>  update history', title),
+s = [Paragraph('DIODE <font color="#3f7f9e">110</font>  update history', title),
      Paragraph(f"Current version {VERSION}. Newest first.", sub)]
 for v, items in HISTORY:
     s.append(KeepTogether([Paragraph(f"Version {v}", ver)] + [Paragraph(t, item, bulletText="•") for t in items]))
     s.append(Spacer(1, 4))
 SimpleDocTemplate(OUT, pagesize=A4, leftMargin=18 * mm, rightMargin=18 * mm, topMargin=18 * mm, bottomMargin=20 * mm,
-                  title=f"UNIT 110 Update History {VERSION}", author="Transistor Labs").build(s, onFirstPage=footer, onLaterPages=footer)
+                  title=f"Diode 110 Update History {VERSION}", author="Transistor Labs").build(s, onFirstPage=footer, onLaterPages=footer)
 print("written", OUT)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Builds docs/UNIT110-Manual.pdf (needs: pip install reportlab).
+# Builds docs/Diode110-Manual.pdf (needs: pip install reportlab).
 #   python3 tools/make_manual.py
 # Pictures: docs/panel.png and docs/pcb.png (editor snapshots written by the plug-in test).
 import os, re
@@ -10,8 +10,8 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak, KeepTogether)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-VERSION = re.search(r"project\(UNIT110 VERSION ([0-9.]+)\)", open(os.path.join(ROOT, "CMakeLists.txt")).read()).group(1)
-OUT = os.path.join(ROOT, "docs", "UNIT110-Manual.pdf")
+VERSION = re.search(r"project\(Diode110 VERSION ([0-9.]+)\)", open(os.path.join(ROOT, "CMakeLists.txt")).read()).group(1)
+OUT = os.path.join(ROOT, "docs", "Diode110-Manual.pdf")
 
 INK = colors.HexColor("#1e1f21")
 BLUE = colors.HexColor("#3f7f9e")
@@ -49,7 +49,7 @@ def footer(canv, doc):
     canv.saveState()
     canv.setFont("Helvetica", 8)
     canv.setFillColor(GREY)
-    canv.drawString(18 * mm, 10 * mm, f"UNIT 110 {VERSION}  ·  Transistor Labs")
+    canv.drawString(18 * mm, 10 * mm, f"Diode 110 {VERSION}  ·  Transistor Labs")
     canv.drawRightString(A4[0] - 18 * mm, 10 * mm, str(doc.page))
     canv.setStrokeColor(BLUE); canv.setLineWidth(0.6)
     canv.line(18 * mm, 13.5 * mm, A4[0] - 18 * mm, 13.5 * mm)
@@ -58,12 +58,12 @@ def footer(canv, doc):
 
 W = A4[0] - 36 * mm
 s = []
-s += [Spacer(1, 14 * mm), Paragraph('UNIT <font color="#3f7f9e">110</font>', title),
+s += [Spacer(1, 14 * mm), Paragraph('DIODE <font color="#3f7f9e">110</font>', title),
       Paragraph(f"Transistor Labs rhythm composer  ·  Owner's manual  ·  version {VERSION}", sub)]
 img = os.path.join(ROOT, "docs", "panel.png")
 if os.path.exists(img):
     s += [Image(img, width=W, height=W * 922 / 1502), Spacer(1, 8)]
-s += [P("UNIT 110 is a drum machine you play like the hardware: press its keys, turn its knobs, read its LCD, and open the "
+s += [P("Diode 110 is a drum machine you play like the hardware: press its keys, turn its knobs, read its LCD, and open the "
         "case to reach the trimmers inside. Six analog-style voices - bass drum, snare, hand clap, closed hat, open hat "
         "and cymbal - a global accent, and a 16-step sequencer with 32 patterns and a song mode. It runs as an Audio Unit, "
         "VST3 or LV2 plug-in and as a standalone app on macOS, Windows and Linux.")]
@@ -82,20 +82,23 @@ s += [table([
 s += [Paragraph("2  Installing", h1)]
 s += [table([
     ["System", "File", "What it installs"],
-    ["macOS", f"UNIT110-{VERSION}-macOS.pkg", "Audio Unit, VST3 and the standalone app. Click Customize to skip any of them."],
-    ["Windows", f"UNIT110-{VERSION}-Windows-Setup.exe", "VST3 (Common Files\\VST3) and the standalone app."],
-    ["Linux", f"UNIT110-{VERSION}-Linux-x86_64.tar.gz", "Unpack and run ./install.sh: VST3 to ~/.vst3, LV2 to ~/.lv2, app to ~/.local/bin."],
+    ["macOS", f"Diode110-{VERSION}-macOS.pkg", "Audio Unit, VST3 and the standalone app. Click Customize to skip any of them."],
+    ["Windows", f"Diode110-{VERSION}-Windows-Setup.exe", "VST3 (Common Files\\VST3) and the standalone app."],
+    ["Linux", f"Diode110-{VERSION}-Linux-x86_64.tar.gz", "Unpack and run ./install.sh: VST3 to ~/.vst3, LV2 to ~/.lv2, app to ~/.local/bin."],
 ], [22 * mm, 66 * mm, W - 88 * mm])]
 s += [Paragraph("2.1  macOS security warning", h2),
       P("The macOS installer is <b>not notarised</b> by Apple, so the first time you open it macOS says it \"cannot be opened "
         "because it is from an unidentified developer\" (or that Apple could not check it for malicious software). To install:"),
       P("1. Double-click the .pkg once and close the warning.<br/>"
-        "2. Open <b>System Settings > Privacy &amp; Security</b>, scroll down to the message about UNIT110 and click <b>Open Anyway</b>.<br/>"
+        "2. Open <b>System Settings > Privacy &amp; Security</b>, scroll down to the message about Diode110 and click <b>Open Anyway</b>.<br/>"
         "3. Confirm with your password and run the installer.<br/>"
         "Alternative: right-click (Control-click) the .pkg in Finder, choose <b>Open</b>, then <b>Open</b> again."),
       P("On Windows, SmartScreen may warn about the installer: click <b>More info > Run anyway</b>."),
-      P("<b>Ableton Live:</b> Settings > Plug-Ins: turn on \"Use Audio Units v2\" (Mac) and/or VST3, then Rescan. UNIT 110 is under "
-        "Plug-Ins > Audio Units (or VST3) > Transistor Labs. Drop it on a MIDI track.")]
+      P("<b>Ableton Live:</b> Settings > Plug-Ins: turn on \"Use Audio Units v2\" (Mac) and/or VST3, then Rescan. Diode 110 is under "
+        "Plug-Ins > Audio Units (or VST3) > Transistor Labs. Drop it on a MIDI track."),
+      P("<b>Updating from UNIT 110:</b> Diode 110 is the same instrument under its new name, installed as a separate plug-in. Delete the old "
+        "<i>UNIT 110.component</i> (/Library/Audio/Plug-Ins/Components), <i>UNIT 110.vst3</i> (/Library/Audio/Plug-Ins/VST3) and "
+        "<i>UNIT 110.app</i> (/Applications), then rescan in your DAW.")]
 
 s += [Paragraph("3  The front panel", h1),
       P("Everything works with the mouse, just like the real keys. Resize the window from its bottom-right corner. "
@@ -111,9 +114,9 @@ s += [table([
     ["BALANCE", "Drums against metal. Turn left and the hats and cymbal fade; turn right and the bass drum, snare and clap fade. Centre = both full."],
     ["ACCENT", "How hard accented steps hit: a short swell on the whole machine that also drives it into grit."],
     ["VOLUME", "Main output level (5 = -14 dB, 10 = +6 dB)."],
-    ["POWER", "Click the switch on the top edge. Off = the LCD goes dark and UNIT 110 is silent."],
+    ["POWER", "Click the switch on the top edge. Off = the LCD goes dark and Diode 110 is silent."],
     ["Knobs", "Drag up/down. The value shows while you drag; double-click resets."],
-    ["Tempo", "UNIT 110 always follows the tempo of your DAW. In the standalone app, drag up/down on the TEMPO box of the LCD to set it "
+    ["Tempo", "Diode 110 always follows the tempo of your DAW. In the standalone app, drag up/down on the TEMPO box of the LCD to set it "
               "(40-250 BPM); double-click it for 120."],
 ], [26 * mm, W - 26 * mm])]
 s += [Paragraph("3.2  Keys", h2)]
@@ -124,7 +127,7 @@ s += [table([
     ["A|B|C|D", "Steps through the 4 banks of 8 patterns (A1-D8). With SHIFT, or in WRITE STEP: I-II, switches between steps 1-8 and 9-16."],
     ["1 - 8", "Selects pattern 1-8 of the current bank. While playing, the new pattern starts at the next step 1 (the LCD shows NEXT). "
               "<b>Cmd-click</b> (Mac) / <b>Ctrl-click</b> (Windows, Linux) builds a PATTERN CHAIN of up to 8 patterns (section 4.3)."],
-    ["START / STOP", "Runs and stops the sequencer while the DAW is stopped, at the DAW's tempo. When the DAW plays, UNIT 110 follows it."],
+    ["START / STOP", "Runs and stops the sequencer while the DAW is stopped, at the DAW's tempo. When the DAW plays, Diode 110 follows it."],
     ["Drum keys", "Play the drum. ACCENT arms an accent for the next drum you hit (the key stays down)."],
     ["SHIFT + drum", "<b>Mute</b> the drum on/off. Its row on the LCD shows M, the name blinks and its steps go faint."],
     ["Option + drum", "<b>Solo</b> the drum on/off (Alt on Windows / Linux). Its row shows S and the other drums go faint. Several drums can be soloed."],
@@ -180,7 +183,7 @@ def screen(title, name, marks, legend, intro=None):
 
 
 s += [PageBreak(), Paragraph("4  The LCD", h1),
-      P("The LCD is UNIT 110's control centre. Everything on it is live: click steps to edit, click the boxes to change things, "
+      P("The LCD is Diode 110's control centre. Everything on it is live: click steps to edit, click the boxes to change things, "
         "<b>right-click</b> for the menu. These are its screens, taken straight from the plug-in.")]
 s += [screen("4.1  The pattern screen (PLAY PATTERN)", "pattern",
              [(140, 34), (148, 170), (448, 123), (292, 352), (480, 398), (735, 398), (975, 398), (985, 600)],
@@ -191,7 +194,7 @@ s += [screen("4.1  The pattern screen (PLAY PATTERN)", "pattern",
               "MODE: the current mode, or a short message after an action.",
               "PATTERN: bank letter + number (A1-D8). While playing, a newly chosen pattern blinks as NEXT until the bar ends.",
               "TEMPO: the tempo in BPM (in the standalone app, drag it up/down; double-click = 120).",
-              "Length (12 / 16 STEPS), swing (SW), and HOST (the DAW is playing) or RUN (UNIT 110 runs on its own)."])]
+              "Length (12 / 16 STEPS), swing (SW), and HOST (the DAW is playing) or RUN (Diode 110 runs on its own)."])]
 s += [screen("4.2  Writing steps (WRITE STEP)", "step",
              [(148, 168), (60, 34), (480, 398), (480, 604)],
              ["The arrow marks the row the number keys edit: press ACCENT or a drum key to choose it.",
@@ -241,10 +244,10 @@ s += [screen("4.7  Messages", "message",
               "12 STEPS, STEPS 9-16, SNARE MUTED, CHAIN FULL, HOST IS PLAYING..."])]
 s += [screen("4.8  Swing and running on its own", "swing",
              [(990, 565)],
-             ["SW 62 = SWING at 62 %. RUN = UNIT 110 plays on its own (START with the DAW stopped); HOST = the DAW is playing."])]
+             ["SW 62 = SWING at 62 %. RUN = Diode 110 plays on its own (START with the DAW stopped); HOST = the DAW is playing."])]
 s += [screen("4.9  Power off", "off",
              [(507, 322)],
-             ["With POWER off the LCD is blank and UNIT 110 is silent. The knobs and trimmers still move."])]
+             ["With POWER off the LCD is blank and Diode 110 is silent. The knobs and trimmers still move."])]
 s += [Paragraph("4.10  The right-click menu", h2),
       P("Right-click the LCD for: <b>Export</b> this pattern, all patterns in a row, every pattern as its own file, or the song as MIDI "
         "(16th notes on channel 10, accents at velocity 127, swing included); <b>Copy pattern</b> / <b>Paste pattern</b> (steps and locks); "
@@ -288,7 +291,7 @@ s += [table([
 s += [Spacer(1, 4),
       P("Velocities up to 100 scale the level; above 100 also fires the accent."),
       P("<b>Outputs (plug-in):</b> main stereo plus one mono output per drum. Right-click a drum key and choose <b>Own output</b> to take "
-        "that drum out of the main mix and send it to its own output (in Live: make an audio track, Audio From = the UNIT 110 track, "
+        "that drum out of the main mix and send it to its own output (in Live: make an audio track, Audio From = the Diode 110 track, "
         "pick the drum's output, Monitor In). The standalone app has only the main output, so there is no right-click menu there."),
       P("All 32 patterns, the song, the mode and every knob and trimmer are saved with your project.")]
 
@@ -306,6 +309,6 @@ s += [table([
 s += [Spacer(1, 8), P("Store: <b>https://ticcoross.gumroad.com/</b>  ·  Questions and feedback: <b>ticcoross@gmail.com</b>")]
 
 doc = SimpleDocTemplate(OUT, pagesize=A4, leftMargin=18 * mm, rightMargin=18 * mm, topMargin=18 * mm, bottomMargin=20 * mm,
-                        title=f"UNIT 110 Manual {VERSION}", author="Transistor Labs", subject="UNIT 110 owner's manual")
+                        title=f"Diode 110 Manual {VERSION}", author="Transistor Labs", subject="Diode 110 owner's manual")
 doc.build(s, onFirstPage=footer, onLaterPages=footer)
 print("wrote", OUT)

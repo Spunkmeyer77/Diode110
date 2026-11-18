@@ -227,7 +227,7 @@ int main (int argc, char** argv)
         put2 (2, 4, "x.x.x.x.x.x.x.x.");   // CH
         put2 (7, 6, "x...............");   // CY in slot 8
         auto f = outDir.getChildFile ("export_test.mid");
-        check (tross110::MidiExport::write (tross110::MidiExport::make (pm, { 2 }, 16, 128.0, "UNIT 110 Pattern 3"), f), "MIDI file written");
+        check (tross110::MidiExport::write (tross110::MidiExport::make (pm, { 2 }, 16, 128.0, "Diode 110 Pattern 3"), f), "MIDI file written");
         juce::MidiFile back;
         juce::FileInputStream in (f);
         const bool read = in.openedOk() && back.readFrom (in);
@@ -366,7 +366,7 @@ int main (int argc, char** argv)
         if (auto w = wav.createWriterFor (os, juce::AudioFormatWriterOptions().withSampleRate (sr).withNumChannels (2).withBitsPerSample (16)))
             w->writeFromAudioSampleBuffer (all, 0, written);
 
-    // ---- extra UNIT 110 controls: balance, power, START/STOP on the tempo knob
+    // ---- extra Diode 110 controls: balance, power, START/STOP on the tempo knob
     {
         host.playing = false; run (2);
         auto setP = [&] (const char* id, float v) { auto* p = proc.apvts.getParameter (id); p->setValueNotifyingHost (p->convertTo0to1 (v)); };

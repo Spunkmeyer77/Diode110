@@ -1,4 +1,4 @@
-// UNIT 110 engine (from TRoss 110): six analog-style drum voices, the global accent, the pattern memory and the
+// Diode 110 engine (from TRoss 110): six analog-style drum voices, the global accent, the pattern memory and the
 // sequencer hooks. No JUCE in here, so it can be tested on its own (tools/render_test.cpp).
 #pragma once
 #include <atomic>

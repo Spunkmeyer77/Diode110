@@ -1,16 +1,16 @@
-# UNIT 110
+# Diode 110
 
 Hyperrealistic 110-style rhythm composer by **Transistor Labs**: AU / VST3 / LV2 / Standalone for macOS, Windows and Linux.
 
-![UNIT 110](docs/panel.png)
+![Diode 110](docs/panel.png)
 
 Six analog-style voices (bass drum, snare, hand clap, closed hat, open hat, cymbal), a global accent and a 16-step
 sequencer with 32 patterns and a song mode, played from a photographed front panel: keys that sink, turning knobs,
 a working POWER switch and a live LCD. Click a case screw (bottom corners) to open the unit and reach the service
 trimmers for every sound setting.
 
-- Manual: [`docs/UNIT110-Manual.pdf`](docs/UNIT110-Manual.pdf)
-- Update history: [`docs/UNIT110-History.pdf`](docs/UNIT110-History.pdf)
+- Manual: [`docs/Diode110-Manual.pdf`](docs/Diode110-Manual.pdf)
+- Update history: [`docs/Diode110-History.pdf`](docs/Diode110-History.pdf)
 - Installers: see [Releases](../../releases)
 
 ## Quick reference
